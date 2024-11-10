@@ -24,6 +24,15 @@ type Answer struct {
 	class string
 }
 
+func typeParser(typeNum uint8) string {
+	dnsTypes := make(map[uint8]string)
+	dnsTypes[1] = "A"
+	dnsTypes[15] = "MX"
+	dnsTypes[5] = "CNAME"
+	dnsTypes[2] = "NS"
+	return dnsTypes[typeNum]
+}
+
 func buildDNSQuery(domain string) ([]byte, error) {
 	// Transaction ID: random 2 bytes
 	var transactionID uint16 = uint16(0x0000 + rand.Intn(1000))
@@ -62,9 +71,10 @@ func parseDNSResponse(response []byte, domain string) (Answer, error) {
 	typeStart := len(response) - 14
 	ip := net.IPv4(response[ipStart], response[ipStart+1], response[ipStart+2], response[ipStart+3])
 	ttl := binary.BigEndian.Uint32(response[ttlStart : ttlStart+4])
-	type_ := response[typeStart : typeStart+2]
+	typeNum := binary.BigEndian.Uint16(response[typeStart : typeStart+2])
+	type_ := typeParser(uint8(typeNum))
 	class := response[classStart : classStart+2]
-	result := Answer{name: domain, ip: ip, ttl: ttl, type_: string(type_), class: string(class)}
+	result := Answer{name: domain, ip: ip, ttl: ttl, type_: type_, class: string(class)}
 	return result, nil
 }
 
