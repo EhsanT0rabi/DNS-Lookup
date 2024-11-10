@@ -7,8 +7,10 @@ package main
 import (
 	"encoding/binary"
 	"fmt"
+	"github.com/urfave/cli"
 	"math/rand"
 	"net"
+	"os"
 	"strings"
 	"sync"
 	"time"
@@ -84,22 +86,33 @@ func resolveDomain(domain string, dnsServer string) (string, error) {
 }
 
 func main() {
-	dnsServer := "1.1.1.1"
-	address := []string{"nic.ir", "sku.ac.ir", "google.com"}
+	app := NewCli()
 	wg := sync.WaitGroup{}
-	wg.Add(len(address))
-	for _, s := range address {
-		s := s
-		go func() {
-			ip, err := resolveDomain(s, dnsServer)
-			if err != nil {
+
+	app.Action = func(c *cli.Context) {
+		domains := strings.Split(c.String("domains"), ",")
+		dnsServer := c.String("dns-server")
+		fmt.Println("DNS Server: ", dnsServer)
+		if len(os.Args) == 1 {
+			fmt.Println("Usage: --domains domain1,domain2,...")
+			return
+		}
+		wg.Add(len(domains))
+		for _, s := range domains {
+			s := s
+			go func() {
+				ip, err := resolveDomain(s, dnsServer)
+				if err != nil {
+					wg.Done()
+					fmt.Println("Error:", err)
+					return
+				}
+				fmt.Printf("The IP address for %s is %s\n", s, ip)
 				wg.Done()
-				fmt.Println("Error:", err)
-				return
-			}
-			fmt.Printf("The IP address for %s is %s\n", s, ip)
-			wg.Done()
-		}()
+			}()
+		}
 	}
+
+	app.Run(os.Args)
 	wg.Wait()
 }
