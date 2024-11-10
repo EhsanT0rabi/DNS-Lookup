@@ -6,7 +6,7 @@ import (
 
 func NewCli() *cli.App {
 	app := cli.App{Flags: []cli.Flag{
-		cli.StringFlag{Name: "dns-server", Value: "1.1.1.1", Usage: "--dns-server \"your dns server\""},
+		cli.StringFlag{Name: "dns", Value: "1.1.1.1", Usage: "--dns \"your dns server\""},
 		cli.StringFlag{Name: "domains", Value: "", Usage: "--domains domain1,domain2,..."},
 	},
 

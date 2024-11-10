@@ -126,7 +126,7 @@ func main() {
 
 	app.Action = func(c *cli.Context) {
 		domains := strings.Split(c.String("domains"), ",")
-		dnsServer := c.String("dns-server")
+		dnsServer := c.String("dns")
 		fmt.Println("DNS Server: ", dnsServer)
 		if len(os.Args) == 1 {
 			fmt.Println("Usage: --domains domain1,domain2,...")
