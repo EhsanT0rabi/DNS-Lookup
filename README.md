@@ -1,6 +1,6 @@
 # Usage:
 ```bash
-DNS-Lookup --domains example.com,example.ir,example.org  --dns 1.1.1.1
+dns-lookup --domains example.com,example.ir,example.org  --dns 1.1.1.1
 ```
 # OPTIONS:
  --dns value  --dns-server "your dns server" (optional) (default: "1.1.1.1")
