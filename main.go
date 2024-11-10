@@ -24,6 +24,15 @@ type Answer struct {
 	class string
 }
 
+func classParser(classNum uint8) string {
+	classTypes := make(map[uint8]string)
+	classTypes[1] = "IN"
+	classTypes[2] = "CS"
+	classTypes[3] = "CH"
+	classTypes[4] = "HS"
+	return classTypes[classNum]
+}
+
 func typeParser(typeNum uint8) string {
 	dnsTypes := make(map[uint8]string)
 	dnsTypes[1] = "A"
@@ -73,8 +82,10 @@ func parseDNSResponse(response []byte, domain string) (Answer, error) {
 	ttl := binary.BigEndian.Uint32(response[ttlStart : ttlStart+4])
 	typeNum := binary.BigEndian.Uint16(response[typeStart : typeStart+2])
 	type_ := typeParser(uint8(typeNum))
-	class := response[classStart : classStart+2]
-	result := Answer{name: domain, ip: ip, ttl: ttl, type_: type_, class: string(class)}
+	classNum := binary.BigEndian.Uint16(response[classStart : classStart+2])
+	class := classParser(uint8(classNum))
+
+	result := Answer{name: domain, ip: ip, ttl: ttl, type_: type_, class: class}
 	return result, nil
 }
 
@@ -131,7 +142,7 @@ func main() {
 					fmt.Println("Error:", err)
 					return
 				}
-				fmt.Printf("The IP address for %s is %s \t TTL: %d  \t type: %s \t class: %s \n", answer.name, answer.ip.String(), answer.ttl, answer.type_, answer.class)
+				fmt.Printf("The IP address for %s is %s \t TTL: %ds  \t type: %s \t class: %s \n", answer.name, answer.ip.String(), answer.ttl, answer.type_, answer.class)
 				wg.Done()
 			}()
 		}
