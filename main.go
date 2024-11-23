@@ -6,8 +6,8 @@ package main
 
 import (
 	"encoding/binary"
+	"flag"
 	"fmt"
-	"github.com/urfave/cli"
 	"math/rand"
 	"net"
 	"os"
@@ -121,33 +121,44 @@ func resolveDomain(domain string, dnsServer string) (Answer, error) {
 }
 
 func main() {
-	app := NewCli()
 	wg := sync.WaitGroup{}
 
-	app.Action = func(c *cli.Context) {
-		domains := strings.Split(c.String("domains"), ",")
-		dnsServer := c.String("dns")
-		fmt.Println("DNS Server: ", dnsServer)
-		if len(os.Args) == 1 {
-			fmt.Println("Usage: --domains domain1,domain2,...")
-			return
-		}
-		wg.Add(len(domains))
-		for _, s := range domains {
-			s := s
-			go func() {
-				answer, err := resolveDomain(s, dnsServer)
-				if err != nil {
-					wg.Done()
-					fmt.Println("Error:", err)
-					return
-				}
-				fmt.Printf("The IP address for %s is %s \t TTL: %ds  \t type: %s \t class: %s \n", answer.name, answer.ip.String(), answer.ttl, answer.type_, answer.class)
-				wg.Done()
-			}()
+	var domains []string
+	var dnsServer string
+	flag.StringVar(&dnsServer, "dns", "1.1.1.1", "DNS server address (optional)")
+
+	flag.Parse()
+	if len(os.Args) == 1 {
+		flag.Usage()
+		fmt.Println("Example:\n\t./DNS-lookup domain1 domain2 domain3 --dns 1.1.1.1")
+		return
+	} else if len(os.Args) >= 2 {
+		domains = flag.Args()
+		if domains[len(domains)-1] == "--dns" {
+			fmt.Println("You used --dns flag but not enter value. Program run with default dns 1.1.1.1")
+			domains = domains[:len(domains)-1]
+
+		} else if domains[len(domains)-2] == "--dns" {
+			dnsServer = domains[len(domains)-1]
+			domains = domains[:len(domains)-2]
 		}
 	}
 
-	app.Run(os.Args)
+	fmt.Println("DNS Server: ", dnsServer)
+	wg.Add(len(domains))
+	for _, s := range domains {
+		s := s
+		go func() {
+			answer, err := resolveDomain(s, dnsServer)
+			if err != nil {
+				wg.Done()
+				fmt.Println("Error:", err)
+				return
+			}
+			fmt.Printf("\t\tThe IP address for %s is %s \t TTL: %ds  \t type: %s \t class: %s \n", answer.name, answer.ip.String(), answer.ttl, answer.type_, answer.class)
+			wg.Done()
+		}()
+	}
+
 	wg.Wait()
 }
