@@ -138,7 +138,7 @@ func main() {
 			fmt.Println("You used --dns flag but not enter value. Program run with default dns 1.1.1.1")
 			domains = domains[:len(domains)-1]
 
-		} else if domains[len(domains)-2] == "--dns" {
+		} else if len(domains) > 2 && domains[len(domains)-2] == "--dns" {
 			dnsServer = domains[len(domains)-1]
 			domains = domains[:len(domains)-2]
 		}
